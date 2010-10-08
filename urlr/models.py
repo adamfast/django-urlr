@@ -10,6 +10,9 @@ class LinkShortenedItemManager(models.Manager):
     def for_object(self, obj):
         return self.get(content_type=ContentType.objects.get_for_model(obj.__class__), object_id=obj.pk)
 
+    def get_or_create_for_object(self, obj):
+        return self.get_or_create(content_type=ContentType.objects.get_for_model(obj.__class__), object_id=obj.pk)
+
 class LinkShortenedItem(models.Model):
     content_type = models.ForeignKey(ContentType)
     object_id = models.PositiveIntegerField()
