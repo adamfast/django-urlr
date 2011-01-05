@@ -25,6 +25,12 @@ class LinkShortenedItem(models.Model):
     def __unicode__(self):
         return self.shortened_url
 
+def determine_permalink(site, absolute_url):
+    if len(site.domain) > 7: # if it's shorter then this it definitely doesn't have a leading http
+        if site.domain[:7] == 'http://': # if it does have a leading http, return it as is
+            return '%s%s' % (site.domain, absolute_url)
+    return 'http://%s%s' % (site.domain, absolute_url) # or add it
+
 def shorten_link(sender, **kwargs):
     """Run when a LinkShortenedItem is saved and ensure that a shortened link is available."""
     lsi = kwargs['instance']
@@ -34,6 +40,6 @@ def shorten_link(sender, **kwargs):
         if not getattr(settings, 'BITLY_API_KEY', False):
             raise ImproperlyConfigured
         c = bitly_api.Connection(settings.BITLY_API_USER, settings.BITLY_API_KEY, preferred_domain=getattr(settings, 'BITLY_CUSTOM_DOMAIN', 'bit.ly'))
-        lsi.shortened_url = c.shorten('http://%s%s' % (Site.objects.get_current().domain, lsi.content_object.get_absolute_url()))['url']
+        lsi.shortened_url = c.shorten(determine_permalink(Site.objects.get_current(), lsi.content_object.get_absolute_url()))['url']
         lsi.save()
 models.signals.post_save.connect(shorten_link, sender=LinkShortenedItem)
