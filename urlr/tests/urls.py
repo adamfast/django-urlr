@@ -1,4 +1,4 @@
-from django.core.urlresolver.defaults import *
+from django.conf.urls.defaults import *
 
 
 urlpatterns = patterns('',

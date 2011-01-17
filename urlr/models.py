@@ -55,7 +55,7 @@ class LinkShortenedItem(models.Model):
                 pass
             else:
                 try:
-                    self.shortened_url = bitly.shorten(full_url)
+                    self.shortened_url = bitly.shorten(full_url)['url']
                 except bitly_api.BitlyError:
                     pass
         
