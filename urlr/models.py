@@ -60,3 +60,14 @@ class LinkShortenedItem(models.Model):
                     pass
         
         super(LinkShortenedItem, self).save(*args, **kwargs)
+    
+    def url(self):
+        if self.shortened_url:
+            return self.shortened_url
+        elif self.content_object:
+            try:
+                return self.content_object.get_absolute_url()
+            except AttributeError:
+                pass
+        
+        return ''

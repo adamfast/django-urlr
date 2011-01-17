@@ -32,7 +32,7 @@ class UrlrModelTests(TestCase):
     def assertUrlsEqual(self, long_url, short_url):
         return self.assertEqual(_short_url(long_url), short_url)
     
-    def test_shortening(self):
+    def test_shortening_via_mgr(self):
         self.assertRaises(
             LinkShortenedItem.DoesNotExist,
             LinkShortenedItem.objects.for_object,
@@ -41,18 +41,34 @@ class UrlrModelTests(TestCase):
         
         obj, c = LinkShortenedItem.objects.get_or_create_for_object(self.test_a)
         self.assertTrue(c)
-        self.assertUrlsEqual(
-            'http://example.com/a/', obj.shortened_url
-        )
+        self.assertUrlsEqual('http://example.com/a/', obj.shortened_url)
+        self.assertEqual(obj.url(), obj.shortened_url)
         
         obj, c = LinkShortenedItem.objects.get_or_create_for_object(self.test_a)
         self.assertFalse(c)
-        self.assertUrlsEqual(
-            'http://example.com/a/', obj.shortened_url
-        )
+        self.assertUrlsEqual('http://example.com/a/', obj.shortened_url)
+        self.assertEqual(obj.url(), obj.shortened_url)
         
         obj, c = LinkShortenedItem.objects.get_or_create_for_object(self.test_b)
         self.assertTrue(c)
-        self.assertUrlsEqual(
-            'http://example.com/b/', obj.shortened_url
-        )
+        self.assertUrlsEqual('http://example.com/b/', obj.shortened_url)
+        self.assertEqual(obj.url(), obj.shortened_url)
+    
+    def test_shortening_via_model(self):
+        lsi = LinkShortenedItem()
+        lsi.content_object = self.test_a
+        lsi.save()
+        
+        self.assertUrlsEqual('http://example.com/a/', lsi.shortened_url)
+        self.assertEqual(lsi.url(), lsi.shortened_url)
+    
+    def test_shortening_no_abs_url(self):
+        no_absolute_url = Site.objects.get_current()
+        self.assertFalse(hasattr(no_absolute_url, 'get_absolute_url'))
+        
+        lsi = LinkShortenedItem()
+        lsi.content_object = no_absolute_url
+        lsi.save()
+        
+        self.assertEqual(lsi.shortened_url, '')
+        self.assertEqual(lsi.url(), '')
